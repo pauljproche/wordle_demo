@@ -110,9 +110,8 @@
     </div>
     <script>
         //For the Dictionary API
-        const apiKey = '0508063d-745a-4357-ad40-a50e5e5cecb5';
-        const apiUrl = `https://www.dictionaryapi.com/api/v3/references/collegiate/json?key=${apiKey}`;
-
+        const apiUrl = 'https://dictionaryapi.com/api/v3/references/collegiate/json/test?key=0508063d-745a-4357-ad40-a50e5e5cecb5';
+ /*
         const api_word = "";
         //USING FETCH 
         fetch(apiUrl)
@@ -133,60 +132,111 @@
         }
         return null; // Return null if no word is found
         }
+*/
+        var api_word = "";
+
+        fetch('https://random-word-api.herokuapp.com/word?length=5')
+        .then(response => response.json())
+        .then(data => {
+            api_word = data[0];
+            //console.log("Fetch!" + api_word);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });   
 
         var guesses = 0;
         var words = ['earth', 'tried', 'apple', 'grape', 'maple', 'sunny', 'leave']; // Array of words
-        console.log(words);
-        console.log(words.length);
+        //console.log(words);
+        //console.log(words.length);
         var row_i = 0;
         var num_rows = document.getElementById("wordle_table").rows.length;
         var theRandomWord = "";
         var splitAnswerArray = "";
         var ind = 0;
-                //START
+        var first_time = true;
+
+        //COMMENT OR UNCOMMENT TARGET WORD FOR 1. PREMADE ARRAY
+        //APPROACH or 2. API APPROACH
         window.onload = function() { //window, on load - 1. get the random world 2. displayAnswer
-            var targetWord = chooseRandomWord(words);
-            displayAnswer(targetWord);
+            setTimeout(function() { //makes sure that api_word is recieved
+                //var targetWord = generateTargetWord(words); //1. Get Answer from words Array
+                var targetWord = generateTargetWord_API(api_word); //2. Get Answer from Dictionary API
+                displayAnswer(targetWord);
+            }, 2000);
         };
-        
-        function chooseRandomWord(i_a) { //get random word
-            //var randomWord = generateTargetWord(i_a); //1. Get Answer from words Array
-            var randomWord = generateTargetWord_API(); //2. Get Answer from Dictionary API
-            return randomWord;
-        }
-        function generateTargetWord(i_a) { //!!!generate target word (replace with API call)
+        function generateTargetWord(i_a) { 
             theRandomWord = i_a[Math.floor(Math.random() * i_a.length)];
             splitAnswerArray = theRandomWord.split("");
             return theRandomWord;
         }
         function generateTargetWord_API(){
-            console.log("yo. the api word is: " + api_word);
+            theRandomWord = api_word;
+            splitAnswerArray = theRandomWord.split("");
+            return theRandomWord;
         }
-        
 
         function displayAnswer(tw) { //display random word
             console.log("The answer is: " + tw);
         }
-        
+
+        //Ref: https://rapidapi.com/apininjas/api/dictionary-by-api-ninjas/
+        async function isAValidWord(word) {
+            const url = 'https://dictionary-by-api-ninjas.p.rapidapi.com/v1/dictionary?word=${word}';
+            const options = {
+                method: 'GET',
+                headers: {
+                'X-RapidAPI-Key': 'b65eba0fe2msh41d5d2a51f4c4c6p197cacjsn7a07cda76d5d',
+                'X-RapidAPI-Host': 'dictionary-by-api-ninjas.p.rapidapi.com'
+                }
+            };
+
+            try {
+                const response = await fetch(url, options);
+                const result = await response.json();
+
+                // Check if the word is valid
+                if (result.length > 0 && result[0].valid) {
+                    console.log("HEYGEt" + result);
+                    return true;
+                } else {
+                    throw new Error('Word is not valid');
+                }
+            } catch (error) {
+                console.error("ERROR: " + error);
+                alert(`Invalid word: ${word}`);
+                return false;
+            }
+        }
+
         function checkGuess() {
             var guessInput = document.getElementById('guessInput');
             var guessVal = guessInput.value;
+            var splitWordArray = guessVal.split("");
+
             console.log("Guess input: " + guessVal);
             if (guessVal.length !== 5) {
                 alert('Please enter a 5-letter word.');
                 return;
             }
-            else if (guessVal == theRandomWord) {
-                document.getElementById("resetButtonAppears").innerHTML = '<button onclick="secondFunction()">New Game</button>';
-                alert('YOU WIN!');
-                return;
-            }
-            /*
-            else if(!isAWord(guessVal)){ //use dictionary api 
+            else if(!isAValidWord(guessVal)){ //use dictionary api 
+                console.log(!isAValidWord(guessVal));
                 alert('Please enter a valid English word');
                 return;
-            }*/
-            var splitWordArray = guessVal.split("");
+            }
+            else if (guessVal == theRandomWord && first_time == true) {
+                first_time = false;
+                document.getElementById("resetButtonAppears").innerHTML = '<button onclick="secondFunction()">New Game</button>';
+                alert('YOU WIN!');
+                createTheRow(splitWordArray);
+                deleteTheRow();
+                validatePerfectRowEle(splitWordArray, ind);
+                return;
+            } 
+            else if (guessVal == theRandomWord && first_time == false){
+                return;
+            }
+
 
             createTheRow(splitWordArray);
             deleteTheRow();
@@ -194,6 +244,7 @@
             validateImperfectRowEle(splitWordArray, ind);
             ind++;
         }
+
 
         function createTheRow(sw_a){
             //Populate first unoccupied row (i.e., 0 - 5)
@@ -224,11 +275,9 @@
         }
 
         function validatePerfectRowEle(theSplitWordArray,rowIndex){ //check for green squares, 
-            //then yellow (if multiple and none are green, only display yellow with earliest index)
-            //const intersection = theSplitWordArray.filter(element => splitAnswerArray.includes(element));
-            console.log(theSplitWordArray);
-            console.log(splitAnswerArray);
-            //console.log(intersection);
+            //TESTING
+            //console.log(theSplitWordArray);
+            //console.log(splitAnswerArray);
 
             var table = document.getElementsByTagName('table')[0];
             var row = table.getElementsByTagName('tr')[rowIndex]; // Get specific row based on rowIndex
@@ -236,18 +285,16 @@
 
             for (let i = 0; i < theSplitWordArray.length; i++) {
                 if (theSplitWordArray[i] == splitAnswerArray[i]) {
-                    console.log("AYY");
-
                     var cell = cells[i];
                     cell.style.backgroundColor = 'green'; // Change the background color of the cell to green
                 }
             }
         }
         function validateImperfectRowEle(theSplitWordArray, rowInd){
-            console.log("AHHHH");
             const intersection = theSplitWordArray.filter(element => splitAnswerArray.includes(element));
-            console.log(intersection);
-            console.log(rowInd);
+            //TESTING
+            //console.log(intersection);
+            //console.log(rowInd);
 
             var table = document.getElementsByTagName('table')[0];
             var row = table.getElementsByTagName('tr')[rowInd]; // Get specific row based on rowIndex
@@ -261,16 +308,16 @@
             for (let i = 0; i < theSplitWordArray.length; i++) {
                 var cell = cells[i];
 
-                if (theSplitWordArray[i] === splitAnswerArray[i]) {
+                if (theSplitWordArray[i] == splitAnswerArray[i]) {
                     // Perfect match, turn the cell green
                     cell.style.backgroundColor = 'green';
                 } else if (intersection.includes(theSplitWordArray[i])) {
                     // Imperfect match
-                    const countInAnswer = splitAnswerArray.filter(elem => elem === theSplitWordArray[i]).length;
-                    const countInGuess = theSplitWordArray.filter(elem => elem === theSplitWordArray[i]).length;
+                    const countInAnswer = splitAnswerArray.filter(elem => elem == theSplitWordArray[i]).length;
+                    const countInGuess = theSplitWordArray.filter(elem => elem == theSplitWordArray[i]).length;
 
                     if (countInGuess <= countInAnswer) {
-                        if (countInGuess > 1 && i === theSplitWordArray.indexOf(theSplitWordArray[i])) {
+                        if (countInGuess > 1 && i == theSplitWordArray.indexOf(theSplitWordArray[i])) {
                             // First occurrence in the correct position, turn the cell green
                             cell.style.backgroundColor = 'green';
                         } else {
