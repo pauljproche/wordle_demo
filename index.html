@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wordle Game</title>
+    <style>
+        table {
+            border-collapse: separate;
+            border-spacing: 5px;
+        }
+        td {
+            width: 60px;
+            height: 60px;
+            border: 1px solid black;
+            text-align: center;
+            padding: 5px;
+        }
+        input[type="text"] {
+            width: 40%;
+            margin-bottom: 20px;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px; 
+        }
+        .button-container button {
+            flex: 1; /*even spacing*/
+            min-width: 45%;
+            max-width: 60%;
+        }
+        .checkButton {
+            max-width: 40%;
+        }
+        @media screen and (min-width: 600px) {
+            input[type="text"] {
+                width: 30%;
+                margin-bottom: 20px;
+            }
+            .button-container {
+                display: flex;
+                gap: 10px; 
+                max-width: 40%;
+            }
+        }
+        @media screen and (min-width: 1000px) {
+            input[type="text"] {
+                width: 15%;
+                margin-bottom: 20px;
+            }
+            .button-container {
+                display: flex;
+                gap: 10px; 
+                max-width: 40%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Wordle!</h1>
+    <table id="wordle_table">
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+    <br/>
+    <label for="guessInput">What is your guess?</label>
+    <input type="text" id="guessInput"/>
+    <br/>
+    <div class="button-container">
+        <button id="checkButton" onclick="checkGuess()">Check my Guess</button>
+        <div id="resetButtonAppears"></div>
+    </div>
+    <script>
+        var guesses = 0;
+        //var targetWord = generateTargetWord(); // Function to generate a random 5-letter word
+        var words = ['earth', 'tried', 'apple', 'grape', 'maple', 'sunny', 'leave']; // Array of words
+        console.log(words);
+        console.log(words.length);
+        var row_i = 0;
+        var num_rows = document.getElementById("wordle_table").rows.length;
+        var theRandomWord = "";
+        var splitAnswerArray = "";
+        var ind = 0;
+                //START
+        window.onload = function() { //window, on load - 1. get the random world 2. displayAnswer
+            var targetWord = chooseRandomWord(words);
+            displayAnswer(targetWord);
+        };
+        
+        function chooseRandomWord(i_a) { //get random word
+            var randomWord = generateTargetWord(i_a); //1. Get Answer from words Array
+            var randomWord = generateTargetWord_API(i_a); //2. Get Answer from Dictionary API
+            return randomWord;
+        }
+        function generateTargetWord(i_a) { //!!!generate target word (replace with API call)
+            theRandomWord = i_a[Math.floor(Math.random() * i_a.length)];
+            splitAnswerArray = theRandomWord.split("");
+            return theRandomWord;
+        }
+        function generateTargetWord_API(i_a){
+            console.log("yo");
+        }
+
+        function displayAnswer(tw) { //display random word
+            console.log("The answer is: " + tw);
+        }
+        
+        function checkGuess() {
+            var guessInput = document.getElementById('guessInput');
+            var guessVal = guessInput.value;
+            console.log("Guess input: " + guessVal);
+            if (guessVal.length !== 5) {
+                alert('Please enter a 5-letter word.');
+                return;
+            }
+            else if (guessVal == theRandomWord) {
+                document.getElementById("resetButtonAppears").innerHTML = '<button onclick="secondFunction()">New Game</button>';
+                alert('YOU WIN!');
+                return;
+            }
+            /*
+            else if(!isAWord(guessVal)){ //use dictionary api 
+                alert('Please enter a valid English word');
+                return;
+            }*/
+            var splitWordArray = guessVal.split("");
+
+            createTheRow(splitWordArray);
+            deleteTheRow();
+            validatePerfectRowEle(splitWordArray, ind);
+            validateImperfectRowEle(splitWordArray, ind);
+            ind++;
+        }
+
+        function createTheRow(sw_a){
+            //Populate first unoccupied row (i.e., 0 - 5)
+            var table = document.getElementById("wordle_table");
+            row_i += 1;
+            if (row_i >= num_rows+1){
+                document.getElementById("resetButtonAppears").innerHTML = '<button onclick="secondFunction()">New Game</button>';
+                alert("GAME OVER! The answer was " + theRandomWord +".");
+            } 
+            var row = table.insertRow(row_i-1);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
+            cell1.innerHTML = sw_a[0];
+            cell2.innerHTML = sw_a[1];
+            cell3.innerHTML = sw_a[2];
+            cell4.innerHTML = sw_a[3];
+            cell5.innerHTML = sw_a[4];
+        }
+        function secondFunction() {
+            location.reload();
+        }
+        function deleteTheRow(){
+            var table = document.getElementById("wordle_table");
+            var row = document.getElementById("wordle_table").deleteRow(table.rows.length-1);
+        }
+
+        function validatePerfectRowEle(theSplitWordArray,rowIndex){ //check for green squares, 
+            //then yellow (if multiple and none are green, only display yellow with earliest index)
+            //const intersection = theSplitWordArray.filter(element => splitAnswerArray.includes(element));
+            console.log(theSplitWordArray);
+            console.log(splitAnswerArray);
+            //console.log(intersection);
+
+            var table = document.getElementsByTagName('table')[0];
+            var row = table.getElementsByTagName('tr')[rowIndex]; // Get specific row based on rowIndex
+            var cells = row.getElementsByTagName('td');
+
+            for (let i = 0; i < theSplitWordArray.length; i++) {
+                if (theSplitWordArray[i] == splitAnswerArray[i]) {
+                    console.log("AYY");
+
+                    var cell = cells[i];
+                    cell.style.backgroundColor = 'green'; // Change the background color of the cell to green
+                }
+            }
+        }
+        function validateImperfectRowEle(theSplitWordArray, rowInd){
+            console.log("AHHHH");
+            const intersection = theSplitWordArray.filter(element => splitAnswerArray.includes(element));
+            console.log(intersection);
+            console.log(rowInd);
+
+            var table = document.getElementsByTagName('table')[0];
+            var row = table.getElementsByTagName('tr')[rowInd]; // Get specific row based on rowIndex
+            var cells = row.getElementsByTagName('td');
+
+            let correctNCount = 0;
+            let incorrectNCount = 0;
+            let correctNIndices = [];
+
+            /* //DOESN'T WORK FOR mummy case 
+            for (let i = 0; i < theSplitWordArray.length; i++) {
+                var cell = cells[i];
+
+                if (theSplitWordArray[i] === splitAnswerArray[i]) {
+                    // Perfect match, turn the cell green
+                    cell.style.backgroundColor = 'green';
+                } else if (intersection.includes(theSplitWordArray[i])) {
+                    // Imperfect match
+                    const countInAnswer = splitAnswerArray.filter(elem => elem === theSplitWordArray[i]).length;
+                    const countInGuess = theSplitWordArray.filter(elem => elem === theSplitWordArray[i]).length;
+
+                    if (countInGuess <= countInAnswer) {
+                        if (countInGuess > 1 && i === theSplitWordArray.indexOf(theSplitWordArray[i])) {
+                            // First occurrence in the correct position, turn the cell green
+                            cell.style.backgroundColor = 'green';
+                        } else {
+                            // Occurrence in the incorrect position, turn the cell yellow
+                            cell.style.backgroundColor = 'yellow';
+                        }
+                    }
+                } else {
+                    // No match, reset the cell to the default background color
+                    cell.style.backgroundColor = '';
+                }
+            }
+            */
+             ///ALSO WORKS v.2.0
+            for (let i = 0; i < theSplitWordArray.length; i++) {
+                // If it's a perfect match, ignore (already processed)
+                if (theSplitWordArray[i] == splitAnswerArray[i]) {
+                    continue;
+                }
+
+                // If the element is in the intersection (imperfect match), turn the cell yellow
+                if (intersection.includes(theSplitWordArray[i])) {
+                    // Check if another cell already turned yellow for the same letter
+                    let otherYellow = false;
+                    for (let j = 0; j < i; j++) {
+                        if (theSplitWordArray[j] == theSplitWordArray[i] && cells[j].style.backgroundColor == 'yellow') {
+                            otherYellow = true;
+                            break;
+                        }
+                    }
+
+                    // If another cell is already yellow, skip turning this cell yellow
+                    if (otherYellow) {
+                        continue;
+                    }
+
+                    var cell = cells[i];
+                    cell.style.backgroundColor = 'yellow';
+                }
+            }  
+            /* //WORKS!!! - just not the double yellow edge case
+            for (let i = 0; i < theSplitWordArray.length; i++) {
+                // If it's a perfect match, ignore (already processed)
+                if (theSplitWordArray[i] == splitAnswerArray[i]) {
+                    continue;
+                }
+
+                // If the element is in the intersection (imperfect match), turn the cell yellow
+                if (intersection.includes(theSplitWordArray[i])) {
+                    var cell = cells[i];
+                    cell.style.backgroundColor = 'yellow';
+                }
+            }
+            */
+        } 
+
+    </script>
+</body>
+</html>
