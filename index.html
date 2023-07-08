@@ -109,8 +109,32 @@
         <div id="resetButtonAppears"></div>
     </div>
     <script>
+        //For the Dictionary API
+        const apiKey = '0508063d-745a-4357-ad40-a50e5e5cecb5';
+        const apiUrl = `https://www.dictionaryapi.com/api/v3/references/collegiate/json?key=${apiKey}`;
+
+        const api_word = "";
+        //USING FETCH 
+        fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            api_word = extractWord(data);
+            console.log(api_word);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });   
+        function extractWord(data) {
+        // Assuming the response contains an array of definitions
+        // Iterate through the definitions to find a word
+        for (const definition of data) {
+            api_word = definition.meta.id;
+            return api_word; // Return the first word found
+        }
+        return null; // Return null if no word is found
+        }
+
         var guesses = 0;
-        //var targetWord = generateTargetWord(); // Function to generate a random 5-letter word
         var words = ['earth', 'tried', 'apple', 'grape', 'maple', 'sunny', 'leave']; // Array of words
         console.log(words);
         console.log(words.length);
@@ -126,8 +150,8 @@
         };
         
         function chooseRandomWord(i_a) { //get random word
-            var randomWord = generateTargetWord(i_a); //1. Get Answer from words Array
-            var randomWord = generateTargetWord_API(i_a); //2. Get Answer from Dictionary API
+            //var randomWord = generateTargetWord(i_a); //1. Get Answer from words Array
+            var randomWord = generateTargetWord_API(); //2. Get Answer from Dictionary API
             return randomWord;
         }
         function generateTargetWord(i_a) { //!!!generate target word (replace with API call)
@@ -135,9 +159,10 @@
             splitAnswerArray = theRandomWord.split("");
             return theRandomWord;
         }
-        function generateTargetWord_API(i_a){
-            console.log("yo");
+        function generateTargetWord_API(){
+            console.log("yo. the api word is: " + api_word);
         }
+        
 
         function displayAnswer(tw) { //display random word
             console.log("The answer is: " + tw);
